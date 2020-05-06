@@ -122,7 +122,7 @@ router.post("/:id/comments", (req, res) => {
                 .catch((err) => {
                   res
                     .status(500)
-                    .json({ message: "I could not retrieve the data" });
+                    .json({ message: "I could not retrieve the data", err });
                 });
             })
             .catch((err) => {
@@ -137,9 +137,34 @@ router.post("/:id/comments", (req, res) => {
         }
       })
       .catch((err) => {
-        res.status(500).json({ message: "I could not retrieve that data." });
+        res
+          .status(500)
+          .json({ message: "I could not retrieve that data.", err });
       });
   }
+});
+
+router.put("/:id", (req, res) => {
+  const id = req.params.id;
+  if (!req.body.title || !req.body.contents) {
+    res.status(400).json({
+      errorMessage: "I need the title and contents for this post please.",
+    });
+  }
+  Posts.update(id, req.body)
+    .then((res) => {
+      if (res === 1) {
+        res.status(200).json(req.body);
+      } else {
+        res
+          .status(404)
+          .json({ message: "I could not find the post with that id." });
+      }
+    })
+    .catch((err) => {
+      console.log({ err });
+      res.status(500).json({ error: "I could not update this post." });
+    });
 });
 
 module.exports = router;
