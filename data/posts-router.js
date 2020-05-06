@@ -77,4 +77,69 @@ router.delete("/:id", (req, res) => {
     });
 });
 
+router.get("/:id/comments", (req, res) => {
+  const id = req.params.id;
+  Posts.findPostComments(id)
+    .then((res) => {
+      if (res) {
+        res.status(200).json(res);
+      } else {
+        res
+          .status(404)
+          .json({ message: "I could not find comments with the ID provided." });
+      }
+    })
+    .catch((err) => {
+      console.log({ err });
+      res.status(500).json({ error: "I could not retrieve the comments." });
+    });
+});
+
+router.post("/:id/comments", (req, res) => {
+  if (!req.body.text) {
+    res.status(400).json({ message: "I will need text to add a comment." });
+  } else {
+    Posts.findById(req.params.id)
+      .then((post) => {
+        if (post) {
+          // console.log(post[0].id)
+          Posts.insertComment({
+            text: req.body.text,
+            post_id: post[0].id,
+          })
+            .then((res) => {
+              console.log(res);
+              Posts.findCommentById(res.id)
+                .then((comment) => {
+                  if (comment.length > 0) {
+                    res.status(200).json(comment[0]);
+                  } else {
+                    res.status(404).json({
+                      message: "I could not find a comment with that id",
+                    });
+                  }
+                })
+                .catch((err) => {
+                  res
+                    .status(500)
+                    .json({ message: "I could not retrieve the data" });
+                });
+            })
+            .catch((err) => {
+              res
+                .status(500)
+                .json({ message: "I could not post this comment", err });
+            });
+        } else {
+          res
+            .status(404)
+            .json({ message: "I could not find a post with that id" });
+        }
+      })
+      .catch((err) => {
+        res.status(500).json({ message: "I could not retrieve that data." });
+      });
+  }
+});
+
 module.exports = router;
